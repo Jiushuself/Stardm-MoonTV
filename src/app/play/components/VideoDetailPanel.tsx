@@ -5,8 +5,8 @@
 import { Download, Heart } from 'lucide-react';
 
 import { SearchResult } from '@/lib/types';
-import { processImageUrl } from '@/lib/utils';
 
+import CoverImage from '@/components/CoverImage';
 import { FollowingIconButton } from '@/components/FollowingIcon';
 
 interface VideoDetailPanelProps {
@@ -53,14 +53,10 @@ export function VideoDetailPanel(props: VideoDetailPanelProps) {
       {detail?.poster && (
         <div className='mx-auto flex-shrink-0 md:mx-0'>
           <div className='aspect-[2/3] w-28 overflow-hidden rounded-xl bg-gray-200 shadow-md sm:w-36 md:w-44 lg:w-52 dark:bg-gray-700'>
-            <img
-              src={processImageUrl(detail.poster)}
+            <CoverImage
+              src={detail.poster}
               alt={videoTitle || '影片封面'}
-              className='w-full h-full object-cover'
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-              }}
+              className='rounded-xl'
             />
           </div>
         </div>
@@ -79,76 +75,76 @@ export function VideoDetailPanel(props: VideoDetailPanelProps) {
             )}
           </h1>
           <div className='flex flex-shrink-0 items-center justify-center gap-3 md:justify-end'>
+            <button
+              type='button'
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite();
+              }}
+              className={`flex h-8 w-8 items-center justify-center rounded-full shadow-md transition-all duration-300 ease-out hover:scale-[1.1] ${
+                favorited
+                  ? 'bg-red-500 text-white hover:bg-red-600'
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+              title={favorited ? '取消收藏' : '加入收藏'}
+              aria-label={favorited ? '取消收藏' : '加入收藏'}
+            >
+              <Heart
+                className={`h-4 w-4 ${
+                  favorited
+                    ? 'fill-white stroke-white'
+                    : 'fill-transparent stroke-current stroke-[1.5]'
+                }`}
+              />
+            </button>
+            {videoUrl && (
               <button
                 type='button'
+                onClick={() => onDownload()}
+                className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-md transition-all duration-300 ease-out hover:scale-[1.1] hover:bg-blue-600'
+                title='下载视频'
+                aria-label='下载视频'
+              >
+                <Download className='h-4 w-4' />
+              </button>
+            )}
+            {videoDoubanId !== 0 && (
+              <a
+                href={`https://movie.douban.com/subject/${videoDoubanId.toString()}`}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white shadow-md transition-all duration-300 ease-out hover:scale-[1.1] hover:bg-green-600'
+                title='打开豆瓣页面'
+                aria-label='打开豆瓣页面'
+              >
+                <svg
+                  width='16'
+                  height='16'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  aria-hidden='true'
+                >
+                  <path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'></path>
+                  <path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'></path>
+                </svg>
+              </a>
+            )}
+            {currentSource && currentId && (
+              <FollowingIconButton
+                following={following}
+                size={16}
+                padding={8}
+                theme='detail'
                 onClick={(e) => {
                   e.stopPropagation();
-                  onToggleFavorite();
+                  onToggleFollowing();
                 }}
-                className={`flex h-8 w-8 items-center justify-center rounded-full shadow-md transition-all duration-300 ease-out hover:scale-[1.1] ${
-                  favorited
-                    ? 'bg-red-500 text-white hover:bg-red-600'
-                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-                }`}
-                title={favorited ? '取消收藏' : '加入收藏'}
-                aria-label={favorited ? '取消收藏' : '加入收藏'}
-              >
-                <Heart
-                  className={`h-4 w-4 ${
-                    favorited
-                      ? 'fill-white stroke-white'
-                      : 'fill-transparent stroke-current stroke-[1.5]'
-                  }`}
-                />
-              </button>
-              {videoUrl && (
-                <button
-                  type='button'
-                  onClick={() => onDownload()}
-                  className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-md transition-all duration-300 ease-out hover:scale-[1.1] hover:bg-blue-600'
-                  title='下载视频'
-                  aria-label='下载视频'
-                >
-                  <Download className='h-4 w-4' />
-                </button>
-              )}
-              {videoDoubanId !== 0 && (
-                <a
-                  href={`https://movie.douban.com/subject/${videoDoubanId.toString()}`}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white shadow-md transition-all duration-300 ease-out hover:scale-[1.1] hover:bg-green-600'
-                  title='打开豆瓣页面'
-                  aria-label='打开豆瓣页面'
-                >
-                  <svg
-                    width='16'
-                    height='16'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='2'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    aria-hidden='true'
-                  >
-                    <path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'></path>
-                    <path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'></path>
-                  </svg>
-                </a>
-              )}
-              {currentSource && currentId && (
-                <FollowingIconButton
-                  following={following}
-                  size={16}
-                  padding={8}
-                  theme='detail'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleFollowing();
-                  }}
-                />
-              )}
+              />
+            )}
           </div>
         </div>
 

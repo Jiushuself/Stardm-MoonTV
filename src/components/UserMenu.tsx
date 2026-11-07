@@ -1262,10 +1262,10 @@ export const UserMenu: React.FC = () => {
           <div className='hidden md:flex items-center justify-between'>
             <div>
               <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                自动隐藏导航栏
+                自动隐藏顶部工具栏
               </h4>
               <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-                开启后桌面端导航栏默认收起，鼠标移到屏幕顶部边缘时自动弹出，页面内容随之上移
+                开启后顶部工具栏默认收起，鼠标移到屏幕顶部时展开，左侧分类始终显示
               </p>
             </div>
             <label className='flex items-center cursor-pointer'>

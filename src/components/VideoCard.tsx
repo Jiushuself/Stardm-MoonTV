@@ -7,7 +7,6 @@ import {
   PlayCircleIcon,
   Trash2,
 } from 'lucide-react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, {
   useCallback,
@@ -32,8 +31,8 @@ import { getIntro } from '@/lib/intro.client';
 import { SearchResult } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 
+import CoverImage from '@/components/CoverImage';
 import FollowingIcon from '@/components/FollowingIcon';
-import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 import MobileActionSheet from '@/components/MobileActionSheet';
 import { useNavigationLoading } from '@/components/NavigationLoadingProvider';
 
@@ -83,7 +82,6 @@ export default function VideoCard({
   const { startLoading } = useNavigationLoading();
   const [favorited, setFavorited] = useState(false);
   const [following, setFollowing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showSources, setShowSources] = useState(false);
   const [favoriteChecked, setFavoriteChecked] = useState(false); // 是否已经检查过收藏状态
   const [followingChecked, setFollowingChecked] = useState(false); // 是否已经检查过追更状态
@@ -516,24 +514,11 @@ export default function VideoCard({
     >
       {/* 图片和播放按钮 */}
       <div className='relative aspect-[2/3] overflow-hidden rounded-lg'>
-        {!isLoading && <ImagePlaceholder aspectRatio='aspect-[2/3]' />}
-        <Image
-          src={processImageUrl(actualPoster)}
+        <CoverImage
+          src={actualPoster}
           alt={actualTitle}
-          fill
-          className='object-cover'
-          referrerPolicy='no-referrer'
-          loading='lazy'
-          onLoad={() => setIsLoading(true)}
-          onError={(e) => {
-            const img = e.target as HTMLImageElement;
-            if (!img.dataset.retried) {
-              img.dataset.retried = 'true';
-              setTimeout(() => {
-                img.src = processImageUrl(actualPoster);
-              }, 2000);
-            }
-          }}
+          aspectRatio='aspect-[2/3]'
+          className='rounded-lg'
         />
 
         <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black-20 to-transparent opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100' />

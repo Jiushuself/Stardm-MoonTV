@@ -12,33 +12,32 @@ import TopNav from './TopNav';
  * 根据当前路径决定是否显示导航栏
  * 在登录、警告等特殊页面不显示导航栏
  */
-const ConditionalNav = () => {
+const ConditionalNav = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
   // 不显示导航栏的路径列表
   const hideNavPaths = ['/login', '/warning'];
 
   // 检查当前路径是否需要隐藏导航栏
-  const shouldHideNav = hideNavPaths.some(path => pathname.startsWith(path));
+  const shouldHideNav = hideNavPaths.some((path) => pathname.startsWith(path));
 
-  // 如果需要隐藏导航栏，返回 null
+  // 登录、警告页保持全宽，不为侧边导航预留空间。
   if (shouldHideNav) {
-    return null;
+    return <>{children}</>;
   }
 
   return (
-    <>
-      {/* 移动端头部 - 固定在根布局，避免页面切换时重新渲染 */}
+    <div className='min-h-screen md:pl-[var(--sidebar-width)]'>
+      {/* 导航留在根布局，切换页面时保持状态。 */}
       <MobileHeader showBackButton={false} />
-
-      {/* 桌面端顶部导航栏 - 固定在根布局，避免页面切换时重新渲染 */}
       <TopNav />
 
-      {/* 移动端底部导航 - 固定在根布局，避免页面切换时重新渲染 */}
+      {children}
+
       <div className='md:hidden'>
         <MobileBottomNav />
       </div>
-    </>
+    </div>
   );
 };
 

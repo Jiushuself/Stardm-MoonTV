@@ -1,9 +1,10 @@
 'use client';
 
 import { Radio, X } from 'lucide-react';
-import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+
+import CoverImage from '@/components/CoverImage';
 
 interface ActionItem {
   id: string;
@@ -210,14 +211,11 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
           <div className='flex items-center gap-3 flex-1 min-w-0'>
             {poster && (
               <div className='relative w-12 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0'>
-                <Image
+                <CoverImage
                   src={poster}
                   alt={title}
-                  fill
-                  className={
-                    origin === 'live' ? 'object-contain' : 'object-cover'
-                  }
-                  loading='lazy'
+                  objectFit={origin === 'live' ? 'contain' : 'cover'}
+                  className='rounded-lg'
                 />
               </div>
             )}

@@ -12,10 +12,18 @@ function getDoubanImageProxyConfig(): {
     | 'custom';
   proxyUrl: string;
 } {
+  // 服务端渲染时没有 localStorage，返回与客户端默认一致的代理方案，
+  // 避免 SSR 直接抛 ReferenceError，也避免首屏与服务端 HTML 不一致。
+  if (typeof window === 'undefined') {
+    return { proxyType: 'server', proxyUrl: '' };
+  }
+
   const doubanImageProxyType =
     localStorage.getItem('doubanImageProxyType') ||
     (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
-    'direct';
+    // 豆瓣图片会拒绝无 Referer 的浏览器直连（返回 418）。默认走服务端代理，
+    // 由代理补齐请求头；用户仍可在设置中手动切换其他代理方案。
+    'server';
   const doubanImageProxy =
     localStorage.getItem('doubanImageProxyUrl') ||
     (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY ||
@@ -59,7 +67,10 @@ export function processImageUrl(originalUrl: string): string {
     case 'server':
       return `/api/image-proxy?url=${encodeURIComponent(normalizedUrl)}`;
     case 'img3':
-      return normalizedUrl.replace(/img\d+\.doubanio\.com/g, 'img3.doubanio.com');
+      return normalizedUrl.replace(
+        /img\d+\.doubanio\.com/g,
+        'img3.doubanio.com'
+      );
     case 'cmliussss-cdn-tencent':
       return normalizedUrl.replace(
         /img\d+\.doubanio\.com/g,
@@ -73,6 +84,9 @@ export function processImageUrl(originalUrl: string): string {
     case 'custom':
       return `${proxyUrl}${encodeURIComponent(normalizedUrl)}`;
     case 'direct':
+      // 豆瓣图片会拒绝无 Referer 的浏览器直连（418）。这里仍走本地代理，
+      // 由代理补齐 Referer 并在原站失败时回退镜像，避免封面全部裂开。
+      return `/api/image-proxy?url=${encodeURIComponent(normalizedUrl)}`;
     default:
       return normalizedUrl;
   }
@@ -257,18 +271,22 @@ export function getRequestTimeout(): number {
   if (typeof window === 'undefined') {
     return 30; // 服务器端返回默认值
   }
-  
+
   try {
     const savedTimeout = localStorage.getItem('requestTimeout');
     if (savedTimeout) {
       const timeoutSeconds = parseInt(savedTimeout, 10);
-      if (!isNaN(timeoutSeconds) && timeoutSeconds >= 1 && timeoutSeconds <= 60) {
+      if (
+        !isNaN(timeoutSeconds) &&
+        timeoutSeconds >= 1 &&
+        timeoutSeconds <= 60
+      ) {
         return timeoutSeconds;
       }
     }
   } catch (error) {
     console.warn('Failed to read timeout from localStorage:', error);
   }
-  
+
   return 30; // 默认30秒
 }

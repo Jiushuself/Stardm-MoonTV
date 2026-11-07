@@ -7,7 +7,6 @@ import {
   Compass,
   Download,
   Film,
-  GripVertical,
   History,
   Home,
   Search,
@@ -17,7 +16,6 @@ import {
   UsersRound,
   X,
 } from 'lucide-react';
-import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { memo, useEffect, useRef, useState } from 'react';
 
@@ -35,8 +33,8 @@ import {
   saveNavMenuOrder,
 } from '@/lib/nav-settings';
 
+import DesktopSidebar, { isSidebarItemActive } from './DesktopSidebar';
 import { useNavigationLoading } from './NavigationLoadingProvider';
-import NavScrollContainer from './NavScrollContainer';
 import SearchSuggestions from './SearchSuggestions';
 import { useSite } from './SiteProvider';
 import SourceSelector from './SourceSelector';
@@ -172,6 +170,9 @@ const TopNav = ({ activePath }: TopNavProps) => {
     visibleMenuItems,
     (item) => item.href,
     menuOrder
+  );
+  const activeMenuItem = orderedMenuItems.find((item) =>
+    isSidebarItemActive(item, active)
   );
   /* 长按拖动结束后保存新顺序 */
   const handleMenuReorder = (order: string[]) => {
@@ -381,13 +382,23 @@ const TopNav = ({ activePath }: TopNavProps) => {
   );
   return (
     <>
+      <DesktopSidebar
+        siteName={siteName}
+        items={isClient ? orderedMenuItems : []}
+        activePath={active}
+        onNavigate={(href) => {
+          if (active !== href) startLoading();
+          setActive(href);
+        }}
+        onReorder={handleMenuReorder}
+      />
       <header
         ref={(element) => {
           navRef.current = element;
         }}
-        className={`top-nav hidden md:block z-50 w-full bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/80 dark:border-gray-700/50 ${
+        className={`top-nav hidden md:block z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/80 dark:border-gray-700/50 ${
           autoHideNav
-            ? 'fixed left-0 right-0 top-0 transition-[transform,opacity] duration-300 ease-out will-change-transform'
+            ? 'fixed left-[var(--sidebar-width)] right-0 top-0 transition-[transform,opacity] duration-300 ease-out will-change-transform motion-reduce:transition-none'
             : 'sticky top-0'
         } ${
           autoHideNav && autoHideNavHidden
@@ -396,81 +407,11 @@ const TopNav = ({ activePath }: TopNavProps) => {
         }`}
       >
         <div className='top-nav__inner mx-auto h-full flex items-center'>
-          {simpleMode ? (
-            <div className='absolute left-1/2 transform -translate-x-1/2'>
-              <Link
-                href='/'
-                className='flex items-center justify-center select-none hover:opacity-80 transition-opacity duration-200'
-                onClick={() => {
-                  if (active !== '/') startLoading();
-                }}
-              >
-                <span className='top-nav__logo font-bold text-green-600 tracking-tight'>
-                  {siteName}
-                </span>
-              </Link>
-            </div>
-          ) : (
-            <Link
-              href='/'
-              className='flex items-center justify-center select-none hover:opacity-80 transition-opacity duration-200 flex-shrink-0'
-              onClick={() => {
-                if (active !== '/') startLoading();
-              }}
-            >
-              <span className='top-nav__logo font-bold text-green-600 tracking-tight'>
-                {siteName}
-              </span>
-            </Link>
-          )}
-          {/* ★ 左侧菜单统一放进固定最大宽度的横向滚动容器：
-              超出部分隐藏并可拖拽 / 滑动查看，长按菜单项还能拖动调整顺序 */}
-          <NavScrollContainer
-            className='top-nav__menu-scroll'
-            activeKey={active}
-            scrollIntoViewSelector='[data-active="true"]'
-            onReorder={handleMenuReorder}
-          >
-            <nav className='flex items-center gap-1'>
-              {isClient &&
-                orderedMenuItems.map((item) => {
-                  const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
-                  const decodedActive = decodeURIComponent(active);
-                  const decodedHref = decodeURIComponent(item.href);
-                  const isActive = item.isHome
-                    ? decodedActive === '/'
-                    : decodedActive === decodedHref ||
-                      (item.href === '/watch-room' &&
-                        decodedActive.startsWith('/watch-room')) ||
-                      (!!typeMatch &&
-                        decodedActive.startsWith('/douban') &&
-                        decodedActive.includes(`type=${typeMatch}`));
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      data-nav-key={item.href}
-                      onClick={() => {
-                        if (!isActive) startLoading();
-                        setActive(item.href);
-                      }}
-                      data-active={isActive}
-                      title='长按可拖动调整位置'
-                      className='top-nav__link top-nav__link--sortable group relative flex items-center gap-2 rounded-lg text-gray-700 hover:bg-gray-100/50 hover:text-green-600 data-[active=true]:bg-green-500/10 data-[active=true]:text-green-600 font-medium transition-colors duration-200 dark:text-gray-300 dark:hover:text-green-400 dark:hover:bg-gray-700/50 dark:data-[active=true]:bg-green-500/10 dark:data-[active=true]:text-green-400'
-                    >
-                      <Icon className='top-nav__icon' />
-                      <span className='top-nav__text'>{item.label}</span>
-                      {/* 拖动把手：悬停菜单栏时浮现，暗示可以长按拖动排序 */}
-                      <GripVertical
-                        aria-hidden
-                        className='top-nav__drag-handle h-3 w-3 absolute -right-0.5 top-1/2 -translate-y-1/2'
-                      />
-                    </Link>
-                  );
-                })}
-            </nav>
-          </NavScrollContainer>
+          <span className='min-w-0 truncate text-sm font-medium text-gray-500 dark:text-gray-400'>
+            {pathname === '/search'
+              ? '搜索'
+              : activeMenuItem?.label || siteName}
+          </span>
           <div className='ml-auto flex items-center justify-end flex-shrink-0'>
             {showSearchBar && searchBarContent}
             {!showSearchBar && searchButton}
